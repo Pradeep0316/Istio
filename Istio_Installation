@@ -1,0 +1,36 @@
+###Install helm befor deploying Istio into your kbernetes cluster###
+helm repo add istio.io https://storage.googleapis.com/istio-release/releases/1.4.0/charts/
+
+###Search for istio packages by helm search istio###
+helm search istio
+
+###First install CRD by initializing the IStio and wait till the crds jobs complete##
+helm install istio/istio-init --name istio-init --namespace istio-system
+kubectl -n istio-system wait --for=condition=complete job --all
+
+###Install Istio
+helm install istio/istio --name istio --namespace istio-system
+
+###To verify run below commands###
+kubectl get svc -n istio-system
+kubectl get pods -n istio-system
+
+##Change the Isti0-ingressgateway by changing the type to NodePort
+kubectl edit svc isto-ingressgateway  -n istio-system
+
+###Install kiali dashboard to make clear view of traffic management ( It recieves all the metrics from Prometheous server)
+helm fetch istio
+cd istio/
+helm install charts/templates/kiali --name helm-kiali --namespace istio-system --values values.yaml
+
+###change the Kiali service to Nodeport from cluster Ip to access Kiali dashboard
+kubectl edit svc kiali  -n istio-system
+
+###Deploy sample application and test
+helm search bookinfo
+helm install bookinfo --name bookinfo 
+
+###Traffic management
+1. Traffic to Ingress gateway
+2. From Ingress gateway to Gateway of your service
+3. From gateway to Virtual service ( Destination details)
