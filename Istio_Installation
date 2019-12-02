@@ -34,3 +34,13 @@ helm install bookinfo --name bookinfo
 1. Traffic to Ingress gateway
 2. From Ingress gateway to Gateway of your service
 3. From gateway to Virtual service ( Destination details)
+
+
+###Circuit breakers (Important part)###
+By using Circuit breakers we wll make the system to more tolerant.
+For Ex: Front end service is talking to backnd service for payments, during this if backend svc goes out of capacity, 
+we will use circuit brakers to not send traffic to backend service for sometime to make that service settle down.
+These are 3 types:
+Closed: backend service is healthy, you can send requests
+Half-open: Send few calls to check the status of back end, if yes please allow
+Open: Back end service is not healthy, please stop sending requests to me
