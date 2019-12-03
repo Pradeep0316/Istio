@@ -44,3 +44,36 @@ These are 3 types:
 Closed: backend service is healthy, you can send requests
 Half-open: Send few calls to check the status of back end, if yes please allow
 Open: Back end service is not healthy, please stop sending requests to me
+
+
+With these settings in the ConnectionPoolSettings field, only one connection can be made to the notifications service 
+within a given time frame: one pending request with a maximum of one request per connection. If a threshold is reached, 
+the circuit breaker will start tripping requests.
+
+The OutlierDetection section is set so that it checks whether there is an error calling the service every second.
+If there is, the service is ejected from the load balancing pool for at least three minutes
+(the 100% maximum ejection percent indicates that all services can be ejected from the pool at the same time, if necessary).
+
+The last line, “httpMaxRequestsPerConnection”, means that if a second connection is attempted against a container that 
+already has an existing connection, the circuit will open. Because we’ve purposely made our container to mimic a slow service,
+it will occasionally encounter this condition. When that happens, Istio will return a 503 error.
+
+Ex:
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: notifications
+spec:
+  host: notifications
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutiveErrors: 1
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100
